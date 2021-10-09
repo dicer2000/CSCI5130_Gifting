@@ -20,8 +20,9 @@ int giftProcess(string, string);
 
 // loads the struct arrays from input file
 bool loadArraysFromFile(string);
-
-
-
-
+bool loadLogicTable();
+bool isLogicMatch(int, int);
+void printLogicTable();
+void deleteLogicTable();
+bool populateTreeAndPrune();
 #endif // PROCESSOR_H

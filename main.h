@@ -26,10 +26,17 @@ struct Child {
 struct Gift {
     string giftName;        // G1, G2, etc
     float price;            // Gift price
-    float size;             // Gift Size
+    float volume;             // Gift Size
     bool isAgeDependent;    // Consider childs age?
     int ageMin;             // The min age for this gift
     int ageMax;             // The max age for this gift
+};
+
+struct Node {
+    int child;
+    int giftMed;
+    int giftLarge;
+    Node* next = NULL;
 };
 
 #endif // MAIN_H

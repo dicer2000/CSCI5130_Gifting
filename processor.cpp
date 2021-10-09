@@ -17,13 +17,23 @@
 #include <filesystem>
 
 using namespace std;
-
 using filesystem::current_path;
 
-// The two main vectors gifts and children
-vector<Gift> vecGiftItems;
-vector<Child> vecChildItems;
+// Constants
+const float GIFTSIZE_MED_LOWER = 1.0;
+const float GIFTSIZE_MED_UPPER = 2.0;
+const float GIFTSIZE_LRG_LOWER = 2.0;
+const float GIFTSIZE_LRG_UPPER = 100.0;
 
+// The two main vectors gifts and children
+vector<Gift> vecGiftItems;      // Vector of all Gifts
+vector<Child> vecChildren;    // Vector of all children
+vector<vector<Node> > vecChildBranches; // Vec of Vec of Nodes for analysis
+vector<int>  vecMedGifts;       // Nodes pointing to Medium Gifts
+vector<int>  vecLrgGifts;       // Nodes pointing to Large Gifts
+int** childGiftLogicTable;      // Fast lookup table
+int nChildCount = 0;
+int nGiftCount = 0;
 
 // giftProcess - Process to start the match process
 int giftProcess(const string inputFile, const string outputFile)
@@ -36,7 +46,34 @@ int giftProcess(const string inputFile, const string outputFile)
         perror("Could not open or parse the input file");
         exit(EXIT_FAILURE);
     }
+    // Load the logic table from this
+    if(!loadLogicTable())
+    {
+        // Trouble loading and parsing input file -- exit with error
+        perror("Could not load logic table");
+        exit(EXIT_FAILURE);
+    }
 
+    // Debug print logic
+    printLogicTable();
+
+    // Build the logic trees & prune
+    if(!populateTreeAndPrune())
+    {
+        // Trouble loading and parsing input file -- exit with error
+        perror("An unknown error occured while populating the logic tree");
+        cout << endl << "Cleaning Up" << endl;
+        deleteLogicTable();
+        exit(EXIT_FAILURE);
+    }
+
+    // Analyze each node looking for the lowest cost
+
+
+
+    // Clean up
+    cout << endl << "Cleaning Up" << endl;
+    deleteLogicTable();
 
     return true;
 }
@@ -86,7 +123,7 @@ cout << "Current working directory: " << current_path() << endl;
             ss >> c.childName;
             ss >> temp;
             ss >> c.age;
-            vecChildItems.push_back(c);
+            vecChildren.push_back(c);
         }
         else
         {
@@ -94,7 +131,7 @@ cout << "Current working directory: " << current_path() << endl;
             Gift g;
             ss >> g.giftName;
             ss >> g.price;
-            ss >> g.size;
+            ss >> g.volume;
             g.isAgeDependent = false;
 
             // Is age dependent?
@@ -118,8 +155,17 @@ cout << "Current working directory: " << current_path() << endl;
                     g.isAgeDependent = true;
                 }
             }
-            
-            vecGiftItems.push_back(g);
+            // Handle gift sizes
+            // Only a real gift if it's at least a medium size
+            if(g.volume >= GIFTSIZE_MED_LOWER)
+            {
+                vecGiftItems.push_back(g);
+                int loc = vecGiftItems.size()-1;
+                if(g.volume < GIFTSIZE_LRG_LOWER)
+                    vecMedGifts.push_back(loc);
+                else
+                    vecLrgGifts.push_back(loc);
+            }
         }
         // Reset the string stream
         ss.clear();
@@ -128,5 +174,123 @@ cout << "Current working directory: " << current_path() << endl;
     }
 
     infile.close();
+    return true;
+}
+
+bool loadLogicTable()
+{
+    nChildCount = vecChildren.size();
+    nGiftCount = vecGiftItems.size();
+
+    if(nChildCount > 0 && nGiftCount > 0)
+    {
+
+        childGiftLogicTable = new int*[nChildCount];
+        for(int i = 0; i < nChildCount; ++i)
+        {
+            childGiftLogicTable[i] = new int[nGiftCount];
+
+            // Now go through each child/gift and fill in table
+            for(int j = 0; j < nGiftCount; j++)
+            {
+                if(vecChildren[i].age >= vecGiftItems[j].ageMin 
+                  && vecChildren[i].age <= vecGiftItems[j].ageMax)
+                    childGiftLogicTable[i][j] = 1;
+                else
+                    childGiftLogicTable[i][j] = 0;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+bool isLogicMatch(int child, int gift)
+{
+    return childGiftLogicTable[child][gift];
+}
+
+void printLogicTable()
+{
+    for(int i = 0; i < nChildCount; ++i)
+    {
+        for(int j = 0; j < nGiftCount; j++)
+            cout << childGiftLogicTable[i][j];
+        cout << endl;
+    }
+}
+
+void deleteLogicTable()
+{
+    // Delete the first set of columns
+    for(int i = 0; i < nChildCount; ++i)
+        delete[] childGiftLogicTable[i];
+    // Delete the rest of the rows
+    delete[] childGiftLogicTable;
+}
+
+bool populateTreeAndPrune()
+{
+    // Child 1 & every gift combo 1 gets a vecChildNodes 
+    // One child + 1 med and 1 large
+    int medGiftStart = 0;
+    int lrgGiftStart = 0;
+
+    int loopCount = min(vecMedGifts.size(), vecLrgGifts.size());
+
+
+    // Iterate through each gift * gift branches
+    for(int i = 0; 
+        i < vecChildren.size()*loopCount*loopCount; i++)
+    {
+        int childCurrent = 0;
+        int medCurrent = medGiftStart;
+        int lrgCurrent = lrgGiftStart;
+
+        // Bool var to determine if this branch is good
+        bool bIsGoodBranch = true;
+        vector<Node> branch;
+
+        // Now through just one branch
+        for(int j = 0; 
+            j < vecChildren.size()*loopCount; j++)
+        {
+            if(childCurrent > vecChildren.size()-1)
+                childCurrent=0;
+            if(medCurrent > vecMedGifts.size()-1)
+                medCurrent=0;
+            if(lrgCurrent > vecLrgGifts.size()-1)
+                lrgCurrent=0;
+
+            // Create the node
+            Node n;
+
+            // Add Next Med Gift
+            n.child = childCurrent;
+            n.giftMed = medCurrent;
+            n.giftLarge = lrgCurrent;
+
+            // Only push the tree if all the children/gifts
+            // meet the age requirements
+            if(!isLogicMatch(childCurrent, vecMedGifts[medCurrent]) || !isLogicMatch(childCurrent, vecLrgGifts[lrgCurrent]))
+            {
+                bIsGoodBranch = false;
+                break;
+            }
+            else
+                branch.push_back(n);
+
+            // Increment everything
+            medCurrent++;
+            lrgCurrent++;
+            childCurrent++;
+        }
+        if(bIsGoodBranch)
+            vecChildBranches.push_back(branch);
+        
+        // Increment everything
+        medGiftStart++;
+        lrgGiftStart++;
+    }
     return true;
 }
