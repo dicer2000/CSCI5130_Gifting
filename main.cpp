@@ -31,6 +31,7 @@ static void show_usage(std::string name)
               << std::endl << std::endl;
 }
 
+/*
 // Main - expecting arguments
 int main(int argc, char* argv[])
 {
@@ -51,3 +52,4 @@ int main(int argc, char* argv[])
     // Call the giftProcess, which processes the gifting logic
     return giftProcess(strInputFilePath, strOutputFilePath);
 }
+*/

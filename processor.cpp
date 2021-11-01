@@ -58,7 +58,7 @@ int giftProcess(const string inputFile, const string outputFile)
     printLogicTable();
 
     // Build the logic trees & prune
-    if(!populateTreeAndPrune())
+    if(!populateMinTreeAndPrune())
     {
         // Trouble loading and parsing input file -- exit with error
         perror("An unknown error occured while populating the logic tree");
@@ -229,21 +229,21 @@ void deleteLogicTable()
     delete[] childGiftLogicTable;
 }
 
-bool populateTreeAndPrune()
+bool populateMinTreeAndPrune()
 {
     // Child 1 & every gift combo 1 gets a vecChildNodes 
     // One child + 1 med and 1 large
     int medGiftStart = 0;
     int lrgGiftStart = 0;
 
-    int loopCount = min(vecMedGifts.size(), vecLrgGifts.size());
-
+    // Use the min of the med and large gifts.  This will be the
+    // ultimate size of the tree children^min(gifts)
+    int giftsMax = min(vecMedGifts.size(), vecLrgGifts.size());
 
     // Iterate through each gift * gift branches
-    for(int i = 0; 
-        i < vecChildren.size()*loopCount*loopCount; i++)
+    for(int b = 0; 
+        b < vecChildren.size()^giftsMax; b++)
     {
-        int childCurrent = 0;
         int medCurrent = medGiftStart;
         int lrgCurrent = lrgGiftStart;
 
@@ -251,39 +251,33 @@ bool populateTreeAndPrune()
         bool bIsGoodBranch = true;
         vector<Node> branch;
 
-        // Now through just one branch
-        for(int j = 0; 
-            j < vecChildren.size()*loopCount; j++)
+        // Go through children
+        for(int c = 0; 
+            bIsGoodBranch && c < vecChildren.size(); c++)
         {
-            if(childCurrent > vecChildren.size()-1)
-                childCurrent=0;
-            if(medCurrent > vecMedGifts.size()-1)
-                medCurrent=0;
-            if(lrgCurrent > vecLrgGifts.size()-1)
-                lrgCurrent=0;
+
+            // Check this node will fit all requirements
+            // for child age
+            if(!isLogicMatch(c, vecMedGifts[medCurrent]) 
+                || !isLogicMatch(c, vecLrgGifts[lrgCurrent]))
+            {
+                bIsGoodBranch = false;
+                break;
+            }   
 
             // Create the node
             Node n;
 
-            // Add Next Med Gift
-            n.child = childCurrent;
+            // Add Child & Gifts to Node
+            n.child = c;
             n.giftMed = medCurrent;
             n.giftLarge = lrgCurrent;
-
-            // Only push the tree if all the children/gifts
-            // meet the age requirements
-            if(!isLogicMatch(childCurrent, vecMedGifts[medCurrent]) || !isLogicMatch(childCurrent, vecLrgGifts[lrgCurrent]))
-            {
-                bIsGoodBranch = false;
-                break;
-            }
-            else
-                branch.push_back(n);
+            // put it in the branch
+            b.push_back(n);
 
             // Increment everything
             medCurrent++;
             lrgCurrent++;
-            childCurrent++;
         }
         if(bIsGoodBranch)
             vecChildBranches.push_back(branch);
