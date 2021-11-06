@@ -5,14 +5,24 @@
 
 int main()
 {
-    std::vector<int> e = { 2, 3 };
-    std::vector<std::string> v = FindPermutations(5, e);
+    std::vector<int> e;// { 2, 3 };
+    std::vector<std::vector<int>> v = FindPermutations(5, e);
 
     // Print out everything in vector v
+    for (std::vector<int> row: v)
+    {
+        for (int val: row) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    /*
     for (int i = 0; i < v.size(); i++)
     {
         std::cout << v[i] << std::endl;
     }
+    */
 }
 
 /*
