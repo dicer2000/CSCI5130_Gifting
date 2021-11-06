@@ -3,7 +3,7 @@
  *
  * Brett Huffman
  * CMP SCI 5130 - Gifting Project
- * Due Oct 27, 2021
+ * Due Nov 19, 2021
  * sharedStructures.h file for project
  ********************************************/
 #ifndef MAIN_H
@@ -32,11 +32,18 @@ struct Gift {
     int ageMax;             // The max age for this gift
 };
 
-struct Node {
+// Forward declare BranchCollection
+typedef struct BranchCollection BranchCollection;
+
+struct ChildNode {
     int child;
-    int giftMed;
-    int giftLarge;
-    Node* next = NULL;
+    vector<int> excludeList;
+    vector<BranchCollection> ChildBranches;
+};
+
+struct BranchCollection {
+    vector<int> giftList;
+    struct ChildNode *nextChild = NULL;
 };
 
 #endif // MAIN_H

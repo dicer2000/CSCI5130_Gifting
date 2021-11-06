@@ -2,7 +2,7 @@
  * Gifting Project - Processor cpp file
  * Brett Huffman
  * CMP SCI 5130 - Project 1
- * Due Oct 27, 2021
+ * Due Nov 19, 2021
  * Main file for processing 
  * how gifts get matched to children
  ********************************************/
@@ -15,6 +15,7 @@
 #include <sstream>
 #include "processor.h"
 #include <filesystem>
+#include "utils.h"
 
 using namespace std;
 using filesystem::current_path;
@@ -28,7 +29,8 @@ const float GIFTSIZE_LRG_UPPER = 100.0;
 // The two main vectors gifts and children
 vector<Gift> vecGiftItems;      // Vector of all Gifts
 vector<Child> vecChildren;    // Vector of all children
-vector<vector<Node> > vecChildBranches; // Vec of Vec of Nodes for analysis
+//vector<vector<Node> > vecChildBranches; // Vec of Vec of Nodes for analysis
+ChildNode *startChild;
 vector<int>  vecMedGifts;       // Nodes pointing to Medium Gifts
 vector<int>  vecLrgGifts;       // Nodes pointing to Large Gifts
 int** childGiftLogicTable;      // Fast lookup table
@@ -58,7 +60,7 @@ int giftProcess(const string inputFile, const string outputFile)
     printLogicTable();
 
     // Build the logic trees & prune
-    if(!populateMinTreeAndPrune())
+    if(!populateTreeAndPrune())
     {
         // Trouble loading and parsing input file -- exit with error
         perror("An unknown error occured while populating the logic tree");
@@ -229,6 +231,49 @@ void deleteLogicTable()
     delete[] childGiftLogicTable;
 }
 
+
+
+
+bool populateTreeAndPrune()
+{
+    // Check for problems before we start
+    if(childGiftLogicTable == NULL ||
+        vecChildren.size() < 1 ||
+        vecGiftItems.size() < 1)
+        return false;
+
+/*
+    // Setup to start
+    int childCount = 0;
+    ChildNode* headChild = NULL;
+    ChildNode* tailChild = NULL;
+    ChildNode* currentChild = NULL;
+    ChildNode* temp = NULL;
+
+    // Start building the tree - this is going to take a while!
+    for(int i=0; i < vecChildren.size(); i++)
+    {
+        // Create the new child node
+        if(i==0)
+            tailChild = headChild = new ChildNode();
+        else
+            tailChild = temp = new ChildNode();
+
+        // Do the pointer changes
+//        currentChild-> = temp;
+//        currentChild = temp;
+
+        // Get all permutations of gifts for 
+        // this child that hasn't already been used
+        vector<string> vecPerms = FindPermutations(vecGiftItems.size(), currentChild->excludeList);
+    
+    }
+*/
+    return true;
+}
+
+
+/*
 bool populateMinTreeAndPrune()
 {
     // Child 1 & every gift combo 1 gets a vecChildNodes 
@@ -288,3 +333,4 @@ bool populateMinTreeAndPrune()
     }
     return true;
 }
+*/

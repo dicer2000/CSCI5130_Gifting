@@ -1043,3 +1043,5 @@ dkms.conf
 main
 logfile*
 main.dSYM
+
+*.docx

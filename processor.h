@@ -3,7 +3,7 @@
  *
  * Brett Huffman
  * CMP SCI 5130 - Gifting Project
- * Due Oct 27, 2021
+ * Due Nov 19, 2021
  * processor.h file for processing the
  * how gifts get matched to children
  ********************************************/
@@ -25,4 +25,8 @@ bool isLogicMatch(int, int);
 void printLogicTable();
 void deleteLogicTable();
 bool populateTreeAndPrune();
+
+void processTree(const int, )
+
+
 #endif // PROCESSOR_H

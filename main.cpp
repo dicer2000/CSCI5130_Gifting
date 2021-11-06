@@ -2,7 +2,7 @@
  * Gifting Project - Main cpp file
  * Brett Huffman
  * CMP SCI 5130 - Project 1
- * Due Oct 27, 2021
+ * Due Nov 19, 2021
  * Main CPP file for project
  ********************************************/
 #include <iostream>
@@ -31,7 +31,6 @@ static void show_usage(std::string name)
               << std::endl << std::endl;
 }
 
-/*
 // Main - expecting arguments
 int main(int argc, char* argv[])
 {
@@ -52,4 +51,3 @@ int main(int argc, char* argv[])
     // Call the giftProcess, which processes the gifting logic
     return giftProcess(strInputFilePath, strOutputFilePath);
 }
-*/
