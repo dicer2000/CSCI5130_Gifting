@@ -1,14 +1,15 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <set>
 #include "utils.h"
 
 int main()
 {
-    std::vector<int> e;// { 2, 3 };
-    std::vector<std::vector<int>> v = FindPermutations(5, e);
+    std::vector<int> e = { 2, 4 };
+    std::set<std::vector<int>> v = FindPermutations(5, e);
 
-    // Print out everything in vector v
+    // Print out everything in set v
     for (std::vector<int> row: v)
     {
         for (int val: row) {

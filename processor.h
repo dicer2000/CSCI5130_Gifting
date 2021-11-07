@@ -10,6 +10,7 @@
 #ifndef PROCESSOR_H
 #define PROCESSOR_H
 
+#include <set>
 #include <string>
 #include "main.h"
 
@@ -26,7 +27,7 @@ void printLogicTable();
 void deleteLogicTable();
 bool populateTreeAndPrune();
 
-void processTree(const int, )
-
+void processChild(const int, const vector<int>&);
+//vector<vector<int>> FindPermutations(int, vector<int>&);
 
 #endif // PROCESSOR_H

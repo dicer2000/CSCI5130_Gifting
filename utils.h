@@ -11,15 +11,15 @@
 #include <vector>
 #include <string>
 
-// FindPermutations - A function to find all permutations
-// of a given number of elements
+// FindPermutations - A function to find all unique permutations
+// of a given number of elements.  The set keeps it unique
 // n = Max Number of elements
 // exclusionSet = The elements to disregard from the end list
-// returns an vector of vector of ints
-std::vector<std::vector<int>> FindPermutations(int n, std::vector<int> &exclusionSet)
+// returns an set of vector of ints
+std::set<std::vector<int>> FindPermutations(const int n, const std::vector<int> &exclusionSet)
 {
     // Fill this 2D vector with all the permutations
-    std::vector<std::vector<int>> permutations;
+    std::set<std::vector<int>> permutations;
     int k = n - 1;
 
     for(int j = 1; j < k + 1; j++)
@@ -39,7 +39,7 @@ std::vector<std::vector<int>> FindPermutations(int n, std::vector<int> &exclusio
             }
             // Keep the the combo if it doesn't have a excluded element in it
             if(vCombo.size() > 0)
-                permutations.push_back(vCombo);
+                permutations.insert(vCombo);
 
         } while (std::prev_permutation(v.begin(), v.end()));
 

@@ -9,12 +9,15 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <set>
 #include <unistd.h>
 #include <cerrno>
 #include <fstream>
 #include <sstream>
-#include "processor.h"
 #include <filesystem>
+#include <algorithm>
+#include <set>
+#include "processor.h"
 #include "utils.h"
 
 using namespace std;
@@ -57,7 +60,7 @@ int giftProcess(const string inputFile, const string outputFile)
     }
 
     // Debug print logic
-    printLogicTable();
+    //printLogicTable();
 
     // Build the logic trees & prune
     if(!populateTreeAndPrune())
@@ -231,9 +234,6 @@ void deleteLogicTable()
     delete[] childGiftLogicTable;
 }
 
-
-
-
 bool populateTreeAndPrune()
 {
     // Check for problems before we start
@@ -242,95 +242,151 @@ bool populateTreeAndPrune()
         vecGiftItems.size() < 1)
         return false;
 
-/*
-    // Setup to start
-    int childCount = 0;
-    ChildNode* headChild = NULL;
-    ChildNode* tailChild = NULL;
-    ChildNode* currentChild = NULL;
-    ChildNode* temp = NULL;
-
-    // Start building the tree - this is going to take a while!
-    for(int i=0; i < vecChildren.size(); i++)
-    {
-        // Create the new child node
-        if(i==0)
-            tailChild = headChild = new ChildNode();
-        else
-            tailChild = temp = new ChildNode();
-
-        // Do the pointer changes
-//        currentChild-> = temp;
-//        currentChild = temp;
-
-        // Get all permutations of gifts for 
-        // this child that hasn't already been used
-        vector<string> vecPerms = FindPermutations(vecGiftItems.size(), currentChild->excludeList);
+    vector<int> vecUsedGifts;
+    processChild(0, vecUsedGifts);
     
-    }
-*/
     return true;
 }
 
+void processChild(const int nCurrentChild, const vector<int>& vecUsedGifts)
+{
+    int nNewChild = nCurrentChild + 1;
+
+    // If no child, then *success* - calc path cost
+    if(nNewChild > vecChildren.size())
+    {
+        // Calculate the cost of this path
+//        int nCost = 0;
+//        for(int i = 0; i < vecUsedGifts.size(); ++i)
+//            nCost += vecGiftItems[vecUsedGifts[i]].price;
+
+        // If this is the best path, save it
+//        if(nCost < nBestCost)
+//        {
+//            nBestCost = nCost;
+//            vecBestGifts = vecUsedGifts;
+//        }
+
+        return;
+    }    
+
+    // If no gifts left, there is a trouble, I think
+
+//    vector<int> e = { 2 };
+
+    // Get each Permutation of gifts from the gifts left
+    // vecChildren.size()
+
+    set<vector<int>> v = FindPermutations(vecGiftItems.size(), vecUsedGifts);
+
+    /*
+    for (std::vector<int> row: v)
+    {
+        for (int val: row) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+    }
+    return;
+    */
+   
+    // Go through each combo of gifts
+    for (std::vector<int> row: v)
+    {
+        bool bIsGiftValid = true;
+        bool bHasMedGift = false;
+        bool bHasLrgGift = false;
+
+        // Add the combo to the Used Gift List
+        vector<int> vecNewUsedGifts = vecUsedGifts;
+
+        for (int val: row)
+        {
+            // Prune by age
+            if(isLogicMatch(nCurrentChild, val))
+            {
+                bIsGiftValid = false;
+                break;
+            }
+            // Check that we have both sizes
+            if(!bHasMedGift &&
+                std::binary_search(vecMedGifts.begin(), vecMedGifts.end(), val))
+                    bHasMedGift = true;
+            if(!bHasLrgGift &&
+                std::binary_search(vecLrgGifts.begin(), vecLrgGifts.end(), val))
+                    bHasLrgGift = true;
+
+            vecNewUsedGifts.push_back(val);
+        }
+        // If gift combo is not age-valid or child
+        // does not both sizes, then not a valid option
+        if(!bIsGiftValid || !(bHasMedGift && bHasLrgGift))
+            continue;
+
+        for (std::vector<int> row: v)
+        {
+            std::cout  << "c" << nNewChild << ": ";
+            for (int val: row) {
+                std::cout << val << " ";
+            }
+            std::cout << std::endl;
+        }
+
+
+
+        // Recurse on this child/gift combo
+        processChild(nNewChild, vecNewUsedGifts);
+    }
+    
+}
 
 /*
-bool populateMinTreeAndPrune()
+// FindPermutations - A function to find all unique permutations
+// of a given number of elements.  The set keeps it unique
+// n = Max Number of elements
+// exclusionSet = The elements to disregard from the end list
+// returns an set of vector of ints
+vector<vector<int>> FindPermutations(int n, vector<int> &exclusionSet)
 {
-    // Child 1 & every gift combo 1 gets a vecChildNodes 
-    // One child + 1 med and 1 large
-    int medGiftStart = 0;
-    int lrgGiftStart = 0;
+    // Fill this 2D vector with all the permutations
+    vector<vector<int>> permutations;
 
-    // Use the min of the med and large gifts.  This will be the
-    // ultimate size of the tree children^min(gifts)
-    int giftsMax = min(vecMedGifts.size(), vecLrgGifts.size());
+    int k = n - 1;
 
-    // Iterate through each gift * gift branches
-    for(int b = 0; 
-        b < vecChildren.size()^giftsMax; b++)
+    for(int j = 1; j < k + 1; j++)
     {
-        int medCurrent = medGiftStart;
-        int lrgCurrent = lrgGiftStart;
+        vector<bool> v(n);
+        fill(v.begin(), v.begin() + j, true);
 
-        // Bool var to determine if this branch is good
-        bool bIsGoodBranch = true;
-        vector<Node> branch;
+        // Loop through our vector mask determining
+        // all combinations of k elements
+        do {
+            vector<int> vCombo;
+            for (int i = 0; i < n; ++i) {
 
-        // Go through children
-        for(int c = 0; 
-            bIsGoodBranch && c < vecChildren.size(); c++)
-        {
-
-            // Check this node will fit all requirements
-            // for child age
-            if(!isLogicMatch(c, vecMedGifts[medCurrent]) 
-                || !isLogicMatch(c, vecLrgGifts[lrgCurrent]))
+                // By saying i!=X, removes X from the possible combinations
+                if (v[i] && !binary_search(exclusionSet.begin(), exclusionSet.end(), i))
+                    vCombo.push_back(i);
+            }
+            // Keep the the combo if it's unique and not empty
+            if(vCombo.size() > 0)
             {
-                bIsGoodBranch = false;
-                break;
-            }   
-
-            // Create the node
-            Node n;
-
-            // Add Child & Gifts to Node
-            n.child = c;
-            n.giftMed = medCurrent;
-            n.giftLarge = lrgCurrent;
-            // put it in the branch
-            b.push_back(n);
-
-            // Increment everything
-            medCurrent++;
-            lrgCurrent++;
-        }
-        if(bIsGoodBranch)
-            vecChildBranches.push_back(branch);
-        
-        // Increment everything
-        medGiftStart++;
-        lrgGiftStart++;
+                // Check Unique
+                bool isUniqueCombo = true;
+                for(int i = 1; i < permutations.size(); ++i)
+                {
+                    if(permutations[i] == vCombo)
+                    {
+                        isUniqueCombo = false;
+                        break;
+                    }
+                }
+                if(isUniqueCombo)
+                    permutations.push_back(vCombo);
+            }
+        } while (prev_permutation(v.begin(), v.end()));
     }
-    return true;
+
+    return permutations;
 }
 */
