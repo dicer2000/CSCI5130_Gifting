@@ -16,10 +16,10 @@
 // n = Max Number of elements
 // exclusionSet = The elements to disregard from the end list
 // returns an set of vector of ints
-std::set<std::vector<int>> FindPermutations(const int n, const std::vector<int> &exclusionSet)
+std::set<std::vector<int> > FindPermutations(const int n, const std::vector<int> &exclusionSet)
 {
     // Fill this 2D vector with all the permutations
-    std::set<std::vector<int>> permutations;
+    std::set<std::vector<int> > permutations;
     int k = n - 1;
 
     for(int j = 1; j < k + 1; j++)

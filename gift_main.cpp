@@ -11,8 +11,8 @@
 #include <unistd.h>
 #include <cerrno>
 #include <fstream>
-#include "processor.h"
-#include "main.h"
+#include "gift_processor.h"
+#include "gift_main.h"
 
 using namespace std;
 
@@ -23,11 +23,11 @@ string strOutputFilePath;
 // Handle errors in input arguments by showing usage screen
 static void show_usage(std::string name)
 {
-    std::cerr << "\ngifting - Gifting application by Brett Huffman for CMP SCI 5130\n"
+    std::cerr << "\ngifting - Gifting application by Brett Huffman for CMP SCI 5130\n\n"
               << "Usage: " << name << " inputFileName outputFileName\n"
-              << "Options:\n"
-              << "inputFileName - the file containing child and gift info\n"
-              << "outputFileName - the file to write the optimum gifting distribution."
+              << "\tOptions:\n"
+              << "\tinputFileName  - the file containing child and gift info\n"
+              << "\toutputFileName - the file to write the optimum gifting distribution"
               << std::endl << std::endl;
 }
 
@@ -35,8 +35,6 @@ static void show_usage(std::string name)
 int main(int argc, char* argv[])
 {
     // Argument processing
-    int opt;
-
     // Must return an input and output file
     if(argc < 3)
     {

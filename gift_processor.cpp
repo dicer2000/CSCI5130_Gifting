@@ -17,18 +17,17 @@
 #include <filesystem>
 #include <algorithm>
 #include <set>
-#include "processor.h"
-#include "utils.h"
 #include <iomanip> // For Precision output
+#include "gift_processor.h"
+#include "utils.h"
 
 using namespace std;
-using filesystem::current_path;
+using std::__fs::filesystem::current_path;
+//using std::filesystem::current_path;
 
 // Constants
 const float GIFTSIZE_MED_LOWER = 1.0;
-const float GIFTSIZE_MED_UPPER = 2.0;
 const float GIFTSIZE_LRG_LOWER = 2.0;
-const float GIFTSIZE_LRG_UPPER = 100.0;
 
 // The two main vectors gifts and children
 vector<Gift> vecGiftItems;      // Vector of all Gifts

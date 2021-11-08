@@ -12,7 +12,7 @@
 
 #include <set>
 #include <string>
-#include "main.h"
+#include "gift_main.h"
 
 using namespace std;
 
@@ -26,8 +26,6 @@ bool isLogicMatch(int, int);
 void printLogicTable();
 void deleteLogicTable();
 bool populateTreeAndPrune();
-
 void processChild(const int, const vector<int>&);
-//vector<vector<int>> FindPermutations(int, vector<int>&);
 
 #endif // PROCESSOR_H

@@ -7,7 +7,7 @@
 int main()
 {
     std::vector<int> e = { 2, 4 };
-    std::set<std::vector<int>> v = FindPermutations(5, e);
+    std::set<std::vector<int> > v = FindPermutations(5, e);
 
     // Print out everything in set v
     for (std::vector<int> row: v)
