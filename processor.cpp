@@ -19,6 +19,7 @@
 #include <set>
 #include "processor.h"
 #include "utils.h"
+#include <iomanip> // For Precision output
 
 using namespace std;
 using filesystem::current_path;
@@ -32,11 +33,17 @@ const float GIFTSIZE_LRG_UPPER = 100.0;
 // The two main vectors gifts and children
 vector<Gift> vecGiftItems;      // Vector of all Gifts
 vector<Child> vecChildren;    // Vector of all children
-//vector<vector<Node> > vecChildBranches; // Vec of Vec of Nodes for analysis
+// Additional objects to make life easier
 ChildNode *startChild;
 vector<int>  vecMedGifts;       // Nodes pointing to Medium Gifts
 vector<int>  vecLrgGifts;       // Nodes pointing to Large Gifts
-int** childGiftLogicTable;      // Fast lookup table
+// Objects to keep track of the best found combos
+vector<vector<int> > vecCurrentGiftCombos; // Vec of Vec of Gift Combos
+vector<vector<int> > vecBestGiftCombos; // Vec of Vec of Gift Combos
+float bestFoundAvg =  numeric_limits<float>::max();
+float calculatedGiftP_N = 0.0;
+// Fast lookup table
+int** childGiftLogicTable;
 int nChildCount = 0;
 int nGiftCount = 0;
 
@@ -62,8 +69,40 @@ int giftProcess(const string inputFile, const string outputFile)
     // Debug print logic
     //printLogicTable();
 
+    // Calculate the Gift P/N
+    if(vecGiftItems.size() > 0)
+    {
+        float fTempP = 0.0;
+        for(int i = 0; i < vecGiftItems.size(); i++)
+            fTempP += vecGiftItems[i].price;
+        calculatedGiftP_N = fTempP / (float)vecGiftItems.size();
+    }
+    else
+    {
+        // Trouble loading and parsing input file -- exit with error
+        perror("Error populating the gift logic -- no gifts found");
+        cout << endl << "Cleaning Up" << endl;
+        deleteLogicTable();
+        exit(EXIT_FAILURE);
+    }
+
+    // Get the best path vectors ready
+    if(vecChildren.size() > 0)
+    {
+        vecBestGiftCombos.resize(vecChildren.size());
+        vecCurrentGiftCombos.resize(vecChildren.size());
+    }
+    else
+    {
+        // Trouble loading and parsing input file -- exit with error
+        perror("Error populating the child logic -- no children found");
+        cout << endl << "Cleaning Up" << endl;
+        deleteLogicTable();
+        exit(EXIT_FAILURE);
+    }
+
     // Build the logic trees & prune
-    if(!populateTreeAndPrune())
+    if(calculatedGiftP_N == 0.0 || !populateTreeAndPrune())
     {
         // Trouble loading and parsing input file -- exit with error
         perror("An unknown error occured while populating the logic tree");
@@ -72,9 +111,16 @@ int giftProcess(const string inputFile, const string outputFile)
         exit(EXIT_FAILURE);
     }
 
-    // Analyze each node looking for the lowest cost
-
-
+    // print out the Sum_e_i and best path combo
+    cout << "Sum_e_i "  << std::setprecision(7) << bestFoundAvg << endl;
+    for(int i = 0; i < vecBestGiftCombos.size(); ++i)
+    {
+        // Print each child and their gift combo
+        cout << "Child" << i;
+        for(int j = 0; j < vecBestGiftCombos[i].size(); j++)
+            cout << " G" << childGiftLogicTable[i][j];
+        cout << endl;
+    }
 
     // Clean up
     cout << endl << "Cleaning Up" << endl;
@@ -256,17 +302,27 @@ void processChild(const int nCurrentChild, const vector<int>& vecUsedGifts)
     if(nNewChild > vecChildren.size())
     {
         // Calculate the cost of this path
-//        int nCost = 0;
-//        for(int i = 0; i < vecUsedGifts.size(); ++i)
-//            nCost += vecGiftItems[vecUsedGifts[i]].price;
-
-        // If this is the best path, save it
-//        if(nCost < nBestCost)
-//        {
-//            nBestCost = nCost;
-//            vecBestGifts = vecUsedGifts;
-//        }
-
+        // if better than best found so far,
+        // make this the winner
+        float fGrandTotal = 0.0f;
+        float fChildTotal = 0.0f;
+        for(int i = 0; i < vecCurrentGiftCombos.size(); i++)
+        {
+            fChildTotal = 0;
+            for(int j = 0; j < vecCurrentGiftCombos[i].size(); j++)
+                fChildTotal += vecGiftItems[vecCurrentGiftCombos[i][j]].price;
+            
+            // subtract the child total from the P/N
+            fChildTotal = std::abs(fChildTotal - calculatedGiftP_N);
+            fGrandTotal += fChildTotal;
+        }
+        // If the grand total is less than the best so far,
+        // Make this path the winner
+        if(fGrandTotal < bestFoundAvg)
+        {
+            bestFoundAvg = fGrandTotal;
+            vecBestGiftCombos = vecCurrentGiftCombos;
+        }
         return;
     }    
 
@@ -300,6 +356,9 @@ void processChild(const int nCurrentChild, const vector<int>& vecUsedGifts)
         // Add the combo to the Used Gift List
         vector<int> vecNewUsedGifts = vecUsedGifts;
 
+        // Clear this gift combo from global vector
+        vecCurrentGiftCombos[nCurrentChild].clear();
+
         for (int val: row)
         {
             // Prune by age
@@ -316,6 +375,7 @@ void processChild(const int nCurrentChild, const vector<int>& vecUsedGifts)
                 std::binary_search(vecLrgGifts.begin(), vecLrgGifts.end(), val))
                     bHasLrgGift = true;
 
+            // Add to the vector of new gifts to use
             vecNewUsedGifts.push_back(val);
         }
         // If gift combo is not age-valid or child
@@ -332,61 +392,12 @@ void processChild(const int nCurrentChild, const vector<int>& vecUsedGifts)
             std::cout << std::endl;
         }
 
-
+        // Set the child's global gift combo
+        // just in case this is the winner path
+        vecCurrentGiftCombos[nCurrentChild] = vecNewUsedGifts;
 
         // Recurse on this child/gift combo
         processChild(nNewChild, vecNewUsedGifts);
     }
     
 }
-
-/*
-// FindPermutations - A function to find all unique permutations
-// of a given number of elements.  The set keeps it unique
-// n = Max Number of elements
-// exclusionSet = The elements to disregard from the end list
-// returns an set of vector of ints
-vector<vector<int>> FindPermutations(int n, vector<int> &exclusionSet)
-{
-    // Fill this 2D vector with all the permutations
-    vector<vector<int>> permutations;
-
-    int k = n - 1;
-
-    for(int j = 1; j < k + 1; j++)
-    {
-        vector<bool> v(n);
-        fill(v.begin(), v.begin() + j, true);
-
-        // Loop through our vector mask determining
-        // all combinations of k elements
-        do {
-            vector<int> vCombo;
-            for (int i = 0; i < n; ++i) {
-
-                // By saying i!=X, removes X from the possible combinations
-                if (v[i] && !binary_search(exclusionSet.begin(), exclusionSet.end(), i))
-                    vCombo.push_back(i);
-            }
-            // Keep the the combo if it's unique and not empty
-            if(vCombo.size() > 0)
-            {
-                // Check Unique
-                bool isUniqueCombo = true;
-                for(int i = 1; i < permutations.size(); ++i)
-                {
-                    if(permutations[i] == vCombo)
-                    {
-                        isUniqueCombo = false;
-                        break;
-                    }
-                }
-                if(isUniqueCombo)
-                    permutations.push_back(vCombo);
-            }
-        } while (prev_permutation(v.begin(), v.end()));
-    }
-
-    return permutations;
-}
-*/
