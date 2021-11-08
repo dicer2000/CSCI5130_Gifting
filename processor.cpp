@@ -67,7 +67,7 @@ int giftProcess(const string inputFile, const string outputFile)
     }
 
     // Debug print logic
-    //printLogicTable();
+    printLogicTable();
 
     // Calculate the Gift P/N
     if(vecGiftItems.size() > 0)
@@ -75,7 +75,7 @@ int giftProcess(const string inputFile, const string outputFile)
         float fTempP = 0.0;
         for(int i = 0; i < vecGiftItems.size(); i++)
             fTempP += vecGiftItems[i].price;
-        calculatedGiftP_N = fTempP / (float)vecGiftItems.size();
+        calculatedGiftP_N = fTempP / (float)vecChildren.size();
     }
     else
     {
@@ -116,9 +116,9 @@ int giftProcess(const string inputFile, const string outputFile)
     for(int i = 0; i < vecBestGiftCombos.size(); ++i)
     {
         // Print each child and their gift combo
-        cout << "Child" << i;
+        cout << "Child" << (i+1);
         for(int j = 0; j < vecBestGiftCombos[i].size(); j++)
-            cout << " G" << childGiftLogicTable[i][j];
+            cout << " " << vecGiftItems[vecBestGiftCombos[i][j]].giftName;
         cout << endl;
     }
 
@@ -135,7 +135,7 @@ bool loadArraysFromFile(const string inputFile)
 
 // Just for debugging now
 current_path("/Users/brett/Documents/Personal/PhD/2021_Algorithms/Projects/GiftingProject");
-cout << "Current working directory: " << current_path() << endl;
+//cout << "Current working directory: " << current_path() << endl;
 
     ifstream infile(inputFile);
     stringstream ss;
@@ -221,7 +221,7 @@ cout << "Current working directory: " << current_path() << endl;
         // Reset the string stream
         ss.clear();
 
-        std::cout << line << std::endl;
+//        std::cout << line << std::endl;
     }
 
     infile.close();
@@ -296,11 +296,15 @@ bool populateTreeAndPrune()
 
 void processChild(const int nCurrentChild, const vector<int>& vecUsedGifts)
 {
+    cout << "*** Child " << nCurrentChild << " ***" << endl;
+
     int nNewChild = nCurrentChild + 1;
 
     // If no child, then *success* - calc path cost
     if(nNewChild > vecChildren.size())
     {
+        cout << "### Calculating Path Summary: " << bestFoundAvg << endl;
+
         // Calculate the cost of this path
         // if better than best found so far,
         // make this the winner
@@ -308,12 +312,17 @@ void processChild(const int nCurrentChild, const vector<int>& vecUsedGifts)
         float fChildTotal = 0.0f;
         for(int i = 0; i < vecCurrentGiftCombos.size(); i++)
         {
+            cout << "  c" << i << ": ";
             fChildTotal = 0;
             for(int j = 0; j < vecCurrentGiftCombos[i].size(); j++)
+            {
                 fChildTotal += vecGiftItems[vecCurrentGiftCombos[i][j]].price;
-            
+                
+                cout << vecGiftItems[vecCurrentGiftCombos[i][j]].giftName << "/" << vecGiftItems[vecCurrentGiftCombos[i][j]].price << " ";
+            }
             // subtract the child total from the P/N
             fChildTotal = std::abs(fChildTotal - calculatedGiftP_N);
+            cout << "=>" << calculatedGiftP_N << ":" << fChildTotal << endl;
             fGrandTotal += fChildTotal;
         }
         // If the grand total is less than the best so far,
@@ -322,39 +331,26 @@ void processChild(const int nCurrentChild, const vector<int>& vecUsedGifts)
         {
             bestFoundAvg = fGrandTotal;
             vecBestGiftCombos = vecCurrentGiftCombos;
+            cout << endl << "### New Best: " << bestFoundAvg << endl;
         }
         return;
     }    
 
     // If no gifts left, there is a trouble, I think
 
-//    vector<int> e = { 2 };
-
     // Get each Permutation of gifts from the gifts left
-    // vecChildren.size()
-
-    set<vector<int>> v = FindPermutations(vecGiftItems.size(), vecUsedGifts);
-
-    /*
-    for (std::vector<int> row: v)
-    {
-        for (int val: row) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
-    }
-    return;
-    */
+    set<vector<int> > v = FindPermutations(vecGiftItems.size(), vecUsedGifts);
    
     // Go through each combo of gifts
-    for (std::vector<int> row: v)
+    set<vector<int> >:: iterator it1;
+    for( it1 = v.begin(); it1!=v.end(); ++it1)
     {
+        // Get the gift combo
+        vector<int> row = *it1;
+
         bool bIsGiftValid = true;
         bool bHasMedGift = false;
         bool bHasLrgGift = false;
-
-        // Add the combo to the Used Gift List
-        vector<int> vecNewUsedGifts = vecUsedGifts;
 
         // Clear this gift combo from global vector
         vecCurrentGiftCombos[nCurrentChild].clear();
@@ -362,7 +358,7 @@ void processChild(const int nCurrentChild, const vector<int>& vecUsedGifts)
         for (int val: row)
         {
             // Prune by age
-            if(isLogicMatch(nCurrentChild, val))
+            if(!isLogicMatch(nCurrentChild, val))
             {
                 bIsGiftValid = false;
                 break;
@@ -376,25 +372,30 @@ void processChild(const int nCurrentChild, const vector<int>& vecUsedGifts)
                     bHasLrgGift = true;
 
             // Add to the vector of new gifts to use
-            vecNewUsedGifts.push_back(val);
+            vecCurrentGiftCombos[nCurrentChild].push_back(val);
         }
         // If gift combo is not age-valid or child
         // does not both sizes, then not a valid option
         if(!bIsGiftValid || !(bHasMedGift && bHasLrgGift))
             continue;
 
-        for (std::vector<int> row: v)
+        std::cout  << "c" << nCurrentChild << ": ";
+        for (int val: row)
         {
-            std::cout  << "c" << nNewChild << ": ";
-            for (int val: row) {
-                std::cout << val << " ";
-            }
-            std::cout << std::endl;
+            std::cout << val << "|";
         }
+        std::cout << std::endl;
 
         // Set the child's global gift combo
         // just in case this is the winner path
-        vecCurrentGiftCombos[nCurrentChild] = vecNewUsedGifts;
+        //vecCurrentGiftCombos[nCurrentChild] = vecNewUsedGifts;
+
+        // Add the combo to the Used Gift List
+        vector<int> vecNewUsedGifts = vecUsedGifts;
+
+        vecNewUsedGifts.insert(vecNewUsedGifts.end(), 
+            vecCurrentGiftCombos[nCurrentChild].begin(), 
+            vecCurrentGiftCombos[nCurrentChild].end() );
 
         // Recurse on this child/gift combo
         processChild(nNewChild, vecNewUsedGifts);
