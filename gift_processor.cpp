@@ -14,7 +14,7 @@
 #include <cerrno>
 #include <fstream>
 #include <sstream>
-#include <filesystem>
+#include <fstream>
 #include <algorithm>
 #include <set>
 #include <iomanip> // For Precision output
@@ -22,7 +22,7 @@
 #include "utils.h"
 
 using namespace std;
-using std::__fs::filesystem::current_path;
+//using std::__fs::filesystem::current_path;
 //using std::filesystem::current_path;
 
 // Constants
@@ -133,7 +133,7 @@ bool loadArraysFromFile(const string inputFile)
 {
 
 // Just for debugging now
-current_path("/Users/brett/Documents/Personal/PhD/2021_Algorithms/Projects/GiftingProject");
+//current_path("/Users/brett/Documents/Personal/PhD/2021_Algorithms/Projects/GiftingProject");
 //cout << "Current working directory: " << current_path() << endl;
 
     ifstream infile(inputFile);
