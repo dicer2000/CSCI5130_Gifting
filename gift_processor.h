@@ -26,6 +26,6 @@ bool isLogicMatch(int, int);
 void printLogicTable();
 void deleteLogicTable();
 bool populateTreeAndPrune();
-void processChild(const int, const vector<int>&);
+void processChild(const int, const vector<int>);
 
 #endif // PROCESSOR_H
