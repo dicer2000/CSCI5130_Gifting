@@ -7,7 +7,7 @@
 appname1 := gifting
 srcfiles := $(shell find . -name "gift*.cpp")
 objects1  := $(patsubst %.cpp, %.o, $(srcfiles))
-CXXFLAGS := -g -std=c++11 -Wall -pedantic
+CXXFLAGS := -g -std=c++11 -Wall -pedantic -Wno-sign-compare
 
 all: $(appname1)
 
