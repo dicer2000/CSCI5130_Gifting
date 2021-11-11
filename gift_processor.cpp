@@ -22,8 +22,6 @@
 #include "utils.h"
 
 using namespace std;
-//using std::__fs::filesystem::current_path;
-//using std::filesystem::current_path;
 
 // Constants
 const float GIFTSIZE_MED_LOWER = 1.0;
@@ -66,7 +64,7 @@ int giftProcess(const string inputFile, const string outputFile)
     }
 
     // Debug print logic
-    printLogicTable();
+//    printLogicTable();
 
     // Calculate the Gift P/N
     if(vecGiftItems.size() > 0)
@@ -121,8 +119,32 @@ int giftProcess(const string inputFile, const string outputFile)
         cout << endl;
     }
 
+    // Output the Sum_e_i and best path combo to file
+    if(outputFile.length() > 0)
+    {
+        ofstream outFile;
+        outFile.open(outputFile, ios::out | ios::trunc); // Open the file
+        if(!outFile.is_open())
+        {
+            // Trouble loading and parsing input file -- exit with error
+            perror("Could not open or parse the output file");
+            exit(EXIT_FAILURE);
+        }
+        outFile << "Sum_e_i "  << std::setprecision(7) << bestFoundAvg << endl;
+        for(int i = 0; i < vecBestGiftCombos.size(); ++i)
+        {
+            // Print each child and their gift combo
+            outFile << "Child" << (i+1);
+            for(int j = 0; j < vecBestGiftCombos[i].size(); j++)
+                outFile << " " << vecGiftItems[vecBestGiftCombos[i][j]].giftName;
+            outFile << endl;
+        }
+        outFile.close();
+    }
+
+
     // Clean up
-    cout << endl << "Cleaning Up" << endl;
+//    cout << endl << "Cleaning Up" << endl;
     deleteLogicTable();
 
     return true;
@@ -146,11 +168,14 @@ bool loadArraysFromFile(const string inputFile)
     
     // Keep track of what is being parsed in file
     bool bInChild = true;
+    // Gift Count
+    int nGiftCount = 0;
 
     // Read in each line
     // Parse the file
     for (string line; getline(infile, line); ) 
     {
+
         // Remove blank lines
         if(line.empty())
             continue;
@@ -210,15 +235,19 @@ bool loadArraysFromFile(const string inputFile)
             if(g.volume >= GIFTSIZE_MED_LOWER)
             {
                 vecGiftItems.push_back(g);
-                int loc = vecGiftItems.size()-1;
-                if(g.volume < GIFTSIZE_LRG_LOWER)
-                    vecMedGifts.push_back(loc);
-                else
-                    vecLrgGifts.push_back(loc);
 
-                // Sort each vector
-                sort(vecMedGifts.begin(), vecMedGifts.end());
-                sort(vecLrgGifts.begin(), vecLrgGifts.end());
+                if(g.volume <= GIFTSIZE_LRG_LOWER)
+                    vecMedGifts.push_back(nGiftCount);
+                else
+                    vecLrgGifts.push_back(nGiftCount);
+
+                // Keep gift count
+                nGiftCount++;
+            }
+            else // Handle "other" sized gifts
+            {
+                vecGiftItems.push_back(g);
+                nGiftCount++;
             }
         }
         // Reset the string stream
@@ -228,6 +257,11 @@ bool loadArraysFromFile(const string inputFile)
     }
 
     infile.close();
+
+    // Sort each vector
+//    sort(vecMedGifts.begin(), vecMedGifts.end());
+//    sort(vecLrgGifts.begin(), vecLrgGifts.end());
+
     return true;
 }
 
@@ -348,8 +382,8 @@ void processChild(const int nCurrentChild, const vector<int> vecUsedGifts)
         {
             bestFoundAvg = fGrandTotal;
             vecBestGiftCombos = vecCurrentGiftCombos;
-            cout << endl << "### New Best: " << bestFoundAvg << endl;
-            cout << endl << "### Gifts: " << nGiftCount << endl;
+//            cout << endl << "### New Best: " << bestFoundAvg << endl;
+//            cout << endl << "### Gifts: " << nGiftCount << endl;
         }
         return;
     }    
@@ -399,7 +433,7 @@ void processChild(const int nCurrentChild, const vector<int> vecUsedGifts)
         }
         // If gift combo is not age-valid or child
         // does not both sizes, then not a valid option
-        if(!bIsGiftValid)// || !(bHasMedGift && bHasLrgGift))
+        if(!bIsGiftValid || !(bHasMedGift && bHasLrgGift))
             continue;
 
         // Add the combo to the Used Gift List
