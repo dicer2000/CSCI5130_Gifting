@@ -109,7 +109,8 @@ int giftProcess(const string inputFile, const string outputFile)
     }
 
     // print out the Sum_e_i and best path combo
-    cout << "Sum_e_i "  << std::setprecision(7) << bestFoundAvg << endl;
+    cout << "Sum_e_i ";
+    cout << std::setprecision(6)  << std::fixed << bestFoundAvg << endl;
     for(int i = 0; i < vecBestGiftCombos.size(); ++i)
     {
         // Print each child and their gift combo
@@ -149,6 +150,7 @@ int giftProcess(const string inputFile, const string outputFile)
 
     return true;
 }
+
 
 // loads the struct arrays from input file
 bool loadArraysFromFile(const string inputFile)
@@ -230,6 +232,7 @@ bool loadArraysFromFile(const string inputFile)
                     g.isAgeDependent = true;
                 }
             }
+
             // Handle gift sizes
             // Only a real gift if it's at least a medium size
             if(g.volume >= GIFTSIZE_MED_LOWER)
