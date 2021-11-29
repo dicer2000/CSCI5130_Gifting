@@ -320,6 +320,7 @@ void deleteLogicTable()
     delete[] childGiftLogicTable;
 }
 
+// Kick off the tree building process
 bool populateTreeAndPrune()
 {
     // Check for problems before we start
@@ -334,6 +335,7 @@ bool populateTreeAndPrune()
     return true;
 }
 
+// Recursive function to process each child
 void processChild(const int nCurrentChild, const vector<int> vecUsedGifts)
 {
 //    cout << "*** Child " << nCurrentChild << " ***" << endl;
