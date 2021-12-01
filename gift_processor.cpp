@@ -20,6 +20,7 @@
 #include <iomanip> // For Precision output
 #include "gift_processor.h"
 #include "utils.h"
+#include "timer.h"
 
 using namespace std;
 
@@ -47,6 +48,9 @@ int nGiftCount = 0;
 // giftProcess - Process to start the match process
 int giftProcess(const string inputFile, const string outputFile)
 {
+    // Start the timer
+    timer t;
+    t.start("Timer started.");
 
     // Try to open the file and parse it in
     if(!loadArraysFromFile(inputFile))
@@ -55,6 +59,7 @@ int giftProcess(const string inputFile, const string outputFile)
         perror("Could not open or parse the input file");
         exit(EXIT_FAILURE);
     }
+
     // Load the logic table from this
     if(!loadLogicTable())
     {
@@ -140,6 +145,10 @@ int giftProcess(const string inputFile, const string outputFile)
                 outFile << " " << vecGiftItems[vecBestGiftCombos[i][j]].giftName;
             outFile << endl;
         }
+
+        t.stop("\nTimer stopped.");
+        cout << t << " seconds.\n" << endl;
+
         outFile.close();
     }
 
